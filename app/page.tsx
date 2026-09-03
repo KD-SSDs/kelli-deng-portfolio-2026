@@ -9,15 +9,15 @@ import ScrollReveal from "../components/ScrollReveal";
 import { Footer, GlobalNav } from "./components/PortfolioShell";
 
 const selectedWork = [
-  { number: "01", title: "副屏产品线 CMF 策略 & 主力机开发", english: "Value-Tier Product Portfolio Strategy", subtitle: "Strategy & Portfolio", href: "/work/value-tier-portfolio", image: "/assets-owner/project-01-preview.png" },
-  { number: "02", title: "A200 Series Product Storytelling & GTM", english: "Product Storytelling & GTM", subtitle: "旗舰视觉转译", href: "/work/a200", image: "/assets-owner/project-02-preview.png" },
-  { number: "03", title: "A200s Series Agile CMF Upgrade", english: "Agile CMF Upgrade", subtitle: "敏捷CMF升级", href: "/work/a200#a200s", image: "/assets-owner/project-03-preview.png" },
-  { number: "04", title: "P90 ✕ GenAI N+1 设计语言", english: "GenAI-assisted Next-gen Exploration", subtitle: "时尚轻三防新航道设计语言迭代", href: "/work/genai-next-gen", image: "/assets-owner/project-04-preview.png" },
+  { number: "01", title: "副屏产品线 CMF 策略 & 主力机开发", english: "Value-Tier Product Portfolio Strategy", subtitle: "Strategy & Portfolio", href: "/work/value-tier-portfolio", image: "/assets-owner/project-01-preview-1600.webp", srcSet: "/assets-owner/project-01-preview-960.webp 960w, /assets-owner/project-01-preview-1600.webp 1600w, /assets-owner/project-01-preview-2560.webp 2560w" },
+  { number: "02", title: "A200 Series Product Storytelling & GTM", english: "Product Storytelling & GTM", subtitle: "旗舰视觉转译", href: "/work/a200", image: "/assets-owner/project-02-preview-1600.webp", srcSet: "/assets-owner/project-02-preview-960.webp 960w, /assets-owner/project-02-preview-1600.webp 1600w, /assets-owner/project-02-preview-2560.webp 2560w" },
+  { number: "03", title: "A200s Series Agile CMF Upgrade", english: "Agile CMF Upgrade", subtitle: "敏捷CMF升级", href: "/work/a200#a200s", image: "/assets-owner/project-03-preview-1600.webp", srcSet: "/assets-owner/project-03-preview-960.webp 960w, /assets-owner/project-03-preview-1600.webp 1600w, /assets-owner/project-03-preview-2560.webp 2560w" },
+  { number: "04", title: "P90 ✕ GenAI N+1 设计语言", english: "GenAI-assisted Next-gen Exploration", subtitle: "时尚轻三防新航道设计语言迭代", href: "/work/genai-next-gen", image: "/assets-owner/project-04-preview-1600.webp", srcSet: "/assets-owner/project-04-preview-960.webp 960w, /assets-owner/project-04-preview-1600.webp 1600w, /assets-owner/project-04-preview-2560.webp 2560w" },
 ];
 
 const motionItems = Array.from({ length: 15 }, (_, index) =>
   ({
-    image: `/assets-owner/item${String(index + 1).padStart(2, "0")}.png`,
+    image: `/assets-owner/item${String(index + 1).padStart(2, "0")}.webp`,
     title: `Project archive image ${String(index + 1).padStart(2, "0")}`,
   })
 );
@@ -176,7 +176,7 @@ export default function Home() {
                 <div><p>{project.subtitle}</p><h2>{project.title}</h2><h3>{project.english}</h3></div>
                 <span className="home-project-arrow" aria-hidden="true">↗</span>
               </header>
-              <figure className="home-project-media"><img src={project.image} alt={`${project.title} project preview`} /></figure>
+              <figure className="home-project-media"><img src={project.image} srcSet={project.srcSet} sizes="100vw" alt={`${project.title} project preview`} loading="lazy" decoding="async" /></figure>
             </a>
           </article>
         ))}
@@ -185,7 +185,7 @@ export default function Home() {
       <section className="portfolio-section home-approach-preview" aria-labelledby="approach-preview-title">
         <div className="home-preview-heading"><p>Approach</p><h2 id="approach-preview-title">CMF Competitive<br />Intelligence</h2></div>
         <div className="home-approach-copy"><p>建立多维可视化框架保持设计趋势敏锐度，再真实助力设计决策提效</p><a href="/approach">Explore approach →</a></div>
-        <a className="home-approach-media" href="/approach" aria-label="Explore CMF Competitive Intelligence"><img src="/embeds/approach/assets/hero.png" alt="CMF Competitive Intelligence trend analysis" /></a>
+        <a className="home-approach-media" href="/approach" aria-label="Explore CMF Competitive Intelligence"><img src="/embeds/approach/assets/hero-1600.webp" srcSet="/embeds/approach/assets/hero-960.webp 960w, /embeds/approach/assets/hero-1600.webp 1600w, /embeds/approach/assets/hero-2400.webp 2400w" sizes="100vw" alt="CMF Competitive Intelligence trend analysis" loading="lazy" decoding="async" /></a>
       </section>
 
       <Footer />

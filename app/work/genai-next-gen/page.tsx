@@ -28,7 +28,7 @@ function ColorCarousel() {
       <div className="color-rail" ref={rail} tabIndex={0} aria-label="四套手机与配件配色方案">
         {colors.map((color) => (
           <article className="color-card" key={color.name}>
-            <img src={`${A}${color.image}`} alt={`${color.name}手机与配件家族方案`} />
+            <img decoding="async" loading="lazy" src={`${A}${color.image}`} alt={`${color.name}手机与配件家族方案`} />
             <div className="color-caption">
               <span>{color.index}</span>
               <div><h3>{color.name}</h3><p>{color.role}</p></div>
@@ -43,7 +43,7 @@ function ColorCarousel() {
 }
 
 function EvidenceImage({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
-  return <figure className={`evidence ${className}`}><img src={`${A}${src}`} alt={alt} loading="lazy" /></figure>;
+  return <figure className={`evidence ${className}`}><img decoding="async" src={`${A}${src}`} alt={alt} loading="lazy" /></figure>;
 }
 
 export default function Home() {
@@ -59,7 +59,7 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <img src={`${A}06.jpg`} alt="P90 手机户外场景概念图" />
+        <img decoding="async" fetchPriority="high" src={`${A}06.jpg`} alt="P90 手机户外场景概念图" />
         <div className="hero-shade" />
         <div className="hero-copy">
           <p className="eyebrow">CMFD · SERIES DESIGN LANGUAGE · 2-WEEK SPRINT</p>
@@ -82,7 +82,7 @@ export default function Home() {
         </div>
 
         <div className="context-grid">
-          <figure className="persona-card"><img src={`${A}persona.jpg`} alt="东南亚城市配送骑手工作场景" /><figcaption><span>REAL CONTEXT</span><b>配送 / 户外作业 / 夜班</b><p>设备跨越工作与个人生活，不应被单一场景定义。</p></figcaption></figure>
+          <figure className="persona-card"><img decoding="async" loading="lazy" src={`${A}persona.jpg`} alt="东南亚城市配送骑手工作场景" /><figcaption><span>REAL CONTEXT</span><b>配送 / 户外作业 / 夜班</b><p>设备跨越工作与个人生活，不应被单一场景定义。</p></figcaption></figure>
           <div className="needs-panel">
             <p className="small-label">SCENE-DRIVEN NEEDS</p>
             <div className="need-row"><b>01</b><span>风吹雨晒</span><em>Water & dust resistance</em></div>
@@ -94,13 +94,13 @@ export default function Home() {
 
         <div className="opportunity">
           <div className="opportunity-copy"><p className="small-label">DIFFERENTIATION OPPORTUNITY</p><h3>不是削弱防护，<br />而是拓宽防护产品的使用边界。</h3><p>专业三防手机以明确的功能表达服务特定用户；P 系列的机会，则是保留可靠感，同时减少视觉负担，让一台设备自然跨越工作与生活。</p></div>
-          <div className="rugged-grid"><img src={`${A}rugged-01.jpg`} alt="专业三防手机案例一" /><img src={`${A}rugged-02.jpg`} alt="专业三防手机案例二" /><img src={`${A}rugged-03.jpg`} alt="专业三防手机案例三" /></div>
+          <div className="rugged-grid"><img decoding="async" loading="lazy" src={`${A}rugged-01.jpg`} alt="专业三防手机案例一" /><img decoding="async" loading="lazy" src={`${A}rugged-02.jpg`} alt="专业三防手机案例二" /><img decoding="async" loading="lazy" src={`${A}rugged-03.jpg`} alt="专业三防手机案例三" /></div>
         </div>
 
         <div className="p80-block">
           <div className="p80-heading"><p className="small-label">STARTING POINT · P80</p><h3>从已上市产品中，沉淀可继承的设计基因。</h3><div className="feature-chips"><span>防护四角</span><span>防撞凹槽装饰件</span><span>耐用纹理 / 材质感知</span></div></div>
           <EvidenceImage src="p80-feature.webp" alt="P80 防护设计特征" />
-          <div className="p80-colors"><img src={`${A}p80-black.webp`} alt="P80 黑色" /><img src={`${A}p80-green.webp`} alt="P80 绿色" /><img src={`${A}p80-orange.webp`} alt="P80 橙色" /></div>
+          <div className="p80-colors"><img decoding="async" loading="lazy" src={`${A}p80-black.webp`} alt="P80 黑色" /><img decoding="async" loading="lazy" src={`${A}p80-green.webp`} alt="P80 绿色" /><img decoding="async" loading="lazy" src={`${A}p80-orange.webp`} alt="P80 橙色" /></div>
         </div>
       </section>
 
@@ -131,13 +131,13 @@ export default function Home() {
           <div className="study-title"><p className="small-label">FOCUSED COLOR STUDIES</p><h3>只深挖两条特殊配色，<br />让材质逻辑先于颜色命名。</h3></div>
           <article className="study heat">
             <div className="study-copy"><span>A</span><h3>淬火钛灰 → 淬火黑</h3><p>厚镀渐变镜片提供强反射防护与时尚感；钛金属反复受热形成的氧化层，则带来坚固、温度与时间的联想。</p><p>将这种渐变聚焦在一体金属凹槽大装饰件上，以基础黑控制整体张力，形成远看克制、近看有记忆点的表达。</p></div>
-            <div className="mood-grid"><img src={`${A}heat-inspiration-01.jpg`} alt="厚镀渐变滑雪镜灵感" /><img src={`${A}heat-inspiration-02.jpg`} alt="火烧钛杯氧化渐变灵感" /></div>
-            <img className="study-result" src={`${A}heat-titanium.jpg`} alt="淬火钛灰手机配色推演方案" />
-            <img className="study-result" src={`${A}heat-titanium-02.jpg`} alt="淬火钛灰横向细节推演方案" />
+            <div className="mood-grid"><img decoding="async" loading="lazy" src={`${A}heat-inspiration-01.jpg`} alt="厚镀渐变滑雪镜灵感" /><img decoding="async" loading="lazy" src={`${A}heat-inspiration-02.jpg`} alt="火烧钛杯氧化渐变灵感" /></div>
+            <img decoding="async" loading="lazy" className="study-result" src={`${A}heat-titanium.jpg`} alt="淬火钛灰手机配色推演方案" />
+            <img decoding="async" loading="lazy" className="study-result" src={`${A}heat-titanium-02.jpg`} alt="淬火钛灰横向细节推演方案" />
           </article>
           <article className="study cold">
             <div className="study-copy"><span>B</span><h3>雪山冷铝</h3><p>以高亮抛光与冷铝光泽强调金属的硬度，同时减少传统工具感，让强度表达更精致、更接近日常时尚产品。</p></div>
-            <img className="study-result" src={`${A}cold-aluminum.jpg`} alt="雪山冷铝手机配色推演方案" />
+            <img decoding="async" loading="lazy" className="study-result" src={`${A}cold-aluminum.jpg`} alt="雪山冷铝手机配色推演方案" />
           </article>
         </div>
 

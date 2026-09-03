@@ -47,6 +47,7 @@ const DriftWall = ({
   const planeRef = useRef(null);
   const trackRefs = useRef([]);
   const rafRef = useRef(null);
+  const animateRef = useRef(null);
 
   const offsetsRef = useRef([]);
   const velocitiesRef = useRef([]);
@@ -100,11 +101,32 @@ const DriftWall = ({
     const observer = new IntersectionObserver(
       ([entry]) => {
         visibleRef.current = entry.isIntersecting;
+        if (entry.isIntersecting && !document.hidden && !rafRef.current && animateRef.current) {
+          lastTsRef.current = null;
+          rafRef.current = requestAnimationFrame(animateRef.current);
+        } else if (!entry.isIntersecting && rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+          lastTsRef.current = null;
+        }
       },
       { threshold: 0.01 }
     );
     observer.observe(container);
-    return () => observer.disconnect();
+    const onVisibilityChange = () => {
+      if (document.hidden && rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+        lastTsRef.current = null;
+      } else if (!document.hidden && visibleRef.current && !rafRef.current && animateRef.current) {
+        rafRef.current = requestAnimationFrame(animateRef.current);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
 
   const baseVelocities = useMemo(() => {
@@ -134,14 +156,14 @@ const DriftWall = ({
 
   useEffect(() => {
     const animate = ts => {
+      if (!visibleRef.current || document.hidden) {
+        rafRef.current = null;
+        lastTsRef.current = null;
+        return;
+      }
       if (lastTsRef.current === null) lastTsRef.current = ts;
       const dt = Math.min(0.05, Math.max(0, ts - lastTsRef.current) / 1000);
       lastTsRef.current = ts;
-
-      if (!visibleRef.current) {
-        rafRef.current = requestAnimationFrame(animate);
-        return;
-      }
 
       const maxTilt = parallax * 8;
       const targetX = pointerRef.current.x * maxTilt;
@@ -179,10 +201,12 @@ const DriftWall = ({
       rafRef.current = requestAnimationFrame(animate);
     };
 
-    rafRef.current = requestAnimationFrame(animate);
+    animateRef.current = animate;
+    if (visibleRef.current && !document.hidden) rafRef.current = requestAnimationFrame(animate);
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
+      animateRef.current = null;
       lastTsRef.current = null;
     };
   }, [baseVelocities, columnMeta, pauseOnHover, parallax, reduced, applyPlaneTransform]);
@@ -246,7 +270,7 @@ const DriftWall = ({
   const renderTile = (item, id, colIndex) => {
     const inner = (
       <span className="drift-wall__inner">
-        <img src={item.image} alt={item.title ?? ''} loading="lazy" decoding="async" draggable={false} />
+        <img src={item.image} alt={item.title ?? ''} loading="lazy" decoding="async" fetchPriority="low" draggable={false} />
         <span className="drift-wall__overlay" aria-hidden="true" />
       </span>
     );

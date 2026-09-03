@@ -136,8 +136,8 @@ document.querySelectorAll('[data-scroll-target]').forEach((button) => button.add
 }));
 
 const finalData = {
-  cherry: { image: 'assets/蜂巢营销色主推dark cherry.png', kicker: 'Primary marketing color', title: '深樱桃色', description: '与一体黑设计契合，以更显性的蜂巢阵列加强视觉传播与结构符号。', alt: '深樱桃主推营销色产品' },
-  orange: { image: 'assets/蜂巢营销色备选建渐变橙色.png', kicker: 'Alternate proposal', title: '橙色 · 营销色储备', description: '作为系列营销色备选方案保留，不替代最终主推营销色。', alt: '橙色备选营销色产品' }
+  cherry: { image: 'assets/蜂巢营销色主推dark cherry.opt.webp', kicker: 'Primary marketing color', title: '深樱桃色', description: '与一体黑设计契合，以更显性的蜂巢阵列加强视觉传播与结构符号。', alt: '深樱桃主推营销色产品' },
+  orange: { image: 'assets/蜂巢营销色备选建渐变橙色.opt.webp', kicker: 'Alternate proposal', title: '橙色 · 营销色储备', description: '作为系列营销色备选方案保留，不替代最终主推营销色。', alt: '橙色备选营销色产品' }
 };
 document.querySelectorAll('.color-switch button').forEach((button) => button.addEventListener('click', () => {
   document.querySelectorAll('.color-switch button').forEach((item) => item.classList.remove('is-active'));

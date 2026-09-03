@@ -290,6 +290,8 @@ export default function Galaxy({
 
     const mesh = new Mesh(gl, { geometry, program });
     let animateId;
+    let isRunning = false;
+    let isInViewport = false;
     let lastFrameTime = 0;
     let travelDepth = 0;
     let animationTime = 0;
@@ -305,7 +307,7 @@ export default function Galaxy({
     };
 
     function update(t) {
-      if (shouldAnimate) animateId = requestAnimationFrame(update);
+      if (shouldAnimate && isRunning) animateId = requestAnimationFrame(update);
       const requestedScene = sceneStateRef?.current || {};
       const hoverSpeed = requestedScene.hoverSpeed || 0;
       const hoverStrength = requestedScene.hoverStrength || 0;
@@ -347,9 +349,34 @@ export default function Galaxy({
 
       renderer.render({ scene: mesh });
     }
+
+    function start() {
+      if (!shouldAnimate || isRunning || !isInViewport || document.hidden) return;
+      isRunning = true;
+      lastFrameTime = 0;
+      animateId = requestAnimationFrame(update);
+    }
+
+    function stop() {
+      isRunning = false;
+      cancelAnimationFrame(animateId);
+    }
+
     ctn.appendChild(gl.canvas);
-    if (shouldAnimate) animateId = requestAnimationFrame(update);
-    else update(0);
+    update(0);
+
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      isInViewport = entry.isIntersecting;
+      if (isInViewport) start();
+      else stop();
+    });
+    visibilityObserver.observe(ctn);
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const interactionTarget = interactionTargetRef?.current || ctn;
 
@@ -371,7 +398,9 @@ export default function Galaxy({
     }
 
     return () => {
-      cancelAnimationFrame(animateId);
+      stop();
+      visibilityObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('resize', resize);
       if (mouseInteraction && !reduceMotion) {
         interactionTarget.removeEventListener('pointermove', handleMouseMove);
