@@ -1,0 +1,158 @@
+:root {
+  --case-frame-max: 1440px;
+  --case-gutter: clamp(24px, 4.5vw, 72px);
+  --case-inline: max(var(--case-gutter), calc((100vw - var(--case-frame-max)) / 2 + var(--case-gutter)));
+  --case-section-y: clamp(92px, 9vw, 132px);
+  --case-h2: clamp(38px, 4.5vw, 66px);
+  --case-h3: clamp(26px, 3vw, 44px);
+  --case-label: 10px;
+  --case-motion: 260ms;
+  --case-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.case-project01,
+body.case-project02,
+body.case-approach {
+  font-family: "Helvetica Neue", "SF Pro Display", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+body.case-project01 .site-nav,
+body.case-project02 .site-nav,
+body.case-approach .site-nav {
+  height: 68px;
+  padding-inline: var(--case-inline);
+}
+
+body.case-project01 .project-mark span,
+body.case-project02 .project-mark span,
+body.case-approach .project-mark strong,
+body.case-project01 .site-nav nav a,
+body.case-project02 .site-nav nav a,
+body.case-approach .site-nav nav a {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+body.case-project01 .section-no,
+body.case-project02 .section-no,
+body.case-approach .section-no,
+body.case-project01 .eyebrow,
+body.case-project02 .eyebrow,
+body.case-approach .eyebrow,
+body.case-approach .stage-label,
+body.case-approach .project-no {
+  font-size: var(--case-label);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+}
+
+body.case-project01 figcaption,
+body.case-project02 figcaption,
+body.case-approach figcaption {
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+body.case-project01 button,
+body.case-project02 button,
+body.case-approach button {
+  font-size: 11px;
+  font-weight: 500;
+  transition-duration: var(--case-motion);
+  transition-timing-function: var(--case-ease);
+}
+
+body.case-project01 .site-nav a,
+body.case-project02 .site-nav a,
+body.case-approach .site-nav a,
+body.case-project01 [role="tab"] button,
+body.case-project02 [role="tab"] button,
+body.case-approach [role="tab"] button {
+  transition-duration: var(--case-motion);
+  transition-timing-function: var(--case-ease);
+}
+
+body.case-project01 button:focus-visible,
+body.case-project02 button:focus-visible,
+body.case-approach button:focus-visible,
+body.case-project01 .site-nav a:focus-visible,
+body.case-project02 .site-nav a:focus-visible,
+body.case-approach .site-nav a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
+/* Project 01: preserve the case-study grid while tightening its hierarchy. */
+body.case-project01 { --max: var(--case-frame-max); }
+body.case-project01 .section { padding: var(--case-section-y) var(--case-inline); }
+body.case-project01 .section-head { margin-bottom: clamp(56px, 6vw, 82px); }
+body.case-project01 .section-head h2 { font-size: var(--case-h2); font-weight: 600; letter-spacing: -0.045em; }
+body.case-project01 .hero h1 { font-size: clamp(38px, 4vw, 64px); font-weight: 600; }
+body.case-project01 .hero-copy { left: var(--case-inline); }
+body.case-project01 .hero-proof { left: var(--case-inline); }
+body.case-project01 .mode-switch button,
+body.case-project01 .tier-controls button,
+body.case-project01 .theme-tabs button,
+body.case-project01 .color-switch button,
+body.case-project01 .zoom-switch button { min-height: 40px; padding-inline: 16px; }
+
+/* Project 02: keep the launch storytelling, reduce headline dominance. */
+body.case-project02 { --max: var(--case-frame-max); }
+body.case-project02 .section,
+body.case-project02 .dark-section { padding-left: var(--case-inline); padding-right: var(--case-inline); }
+body.case-project02 .section-head { margin-bottom: clamp(54px, 6vw, 82px); }
+body.case-project02 .section-head h2,
+body.case-project02 .context h2,
+body.case-project02 .window-copy h2,
+body.case-project02 .launch-head h2,
+body.case-project02 .family-title h2 { font-size: var(--case-h2); font-weight: 600; letter-spacing: -0.045em; }
+body.case-project02 .hero h1 { font-size: clamp(52px, 6.3vw, 92px); font-weight: 600; }
+body.case-project02 .hero-copy,
+body.case-project02 .hero-meta { left: var(--case-inline); }
+body.case-project02 .section-head > p:last-child,
+body.case-project02 .launch-head > p:last-child,
+body.case-project02 .lede { font-size: clamp(16px, 1.2vw, 18px); }
+
+/* Approach: preserve the scroll-led evidence system and normalize its type. */
+body.case-approach {
+  --side: var(--case-inline);
+  --nav-h: 68px;
+}
+body.case-approach .hero h1 { font-size: clamp(58px, 7vw, 104px); line-height: 0.88; font-weight: 600; }
+body.case-approach .intro,
+body.case-approach .quarterly,
+body.case-approach .brand,
+body.case-approach .method { padding-top: var(--case-section-y); padding-bottom: var(--case-section-y); }
+body.case-approach .intelligence,
+body.case-approach .applied { padding-top: var(--case-section-y); }
+body.case-approach .intro h2,
+body.case-approach .section-head h2 { font-size: var(--case-h2); line-height: 1.06; font-weight: 580; letter-spacing: -0.045em; }
+body.case-approach .industry-copy h3,
+body.case-approach .subsection-head h3 { font-size: clamp(36px, 4.4vw, 66px); line-height: 1.04; }
+body.case-approach .method-steps h3,
+body.case-approach .project-copy h3,
+body.case-approach .project-notes h3 { font-size: var(--case-h3); line-height: 1.12; }
+body.case-approach .framework-bar { padding-left: var(--case-inline); padding-right: var(--case-inline); }
+body.case-approach .framework-bar a span { font-size: 12px; }
+body.case-approach .rail-controls button { width: 42px; height: 42px; }
+
+@media (max-width: 900px) {
+  :root { --case-gutter: 20px; --case-section-y: 82px; }
+  body.case-project01 .site-nav,
+  body.case-project02 .site-nav,
+  body.case-approach .site-nav { height: 60px; }
+  body.case-approach { --nav-h: 60px; }
+  body.case-project01 .hero-copy,
+  body.case-project01 .hero-proof,
+  body.case-project02 .hero-copy,
+  body.case-project02 .hero-meta { left: var(--case-gutter); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.case-project01 *,
+  body.case-project02 *,
+  body.case-approach * { scroll-behavior: auto; }
+}
