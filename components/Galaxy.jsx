@@ -27,6 +27,8 @@ uniform float uHueShift;
 uniform float uSpeed;
 uniform vec2 uMouse;
 uniform float uGlowIntensity;
+uniform float uGlowTightness;
+uniform float uGlowCap;
 uniform float uSaturation;
 uniform bool uMouseRepulsion;
 uniform float uTwinkleIntensity;
@@ -74,7 +76,9 @@ vec3 hsv2rgb(vec3 c) {
 }
 
 float Star(vec2 uv, float flare) {
-  float d = length(uv);
+  // Avoid an unbounded hotspot at the exact star centre. WebKit is more
+  // prone to spreading that saturated pixel during canvas compositing.
+  float d = max(length(uv), 0.0005);
   float m = (0.05 * uGlowIntensity) / d;
   float rays = smoothstep(0.0, 1.0, 1.0 - abs(uv.x * uv.y * 1000.0));
   m += rays * flare * uGlowIntensity;
@@ -172,6 +176,11 @@ void main() {
   }
 
   col *= uFieldOpacity;
+  // Apply the Safari halo correction once per pixel rather than inside every
+  // star sample, keeping the shader cost effectively unchanged.
+  float haloMask = smoothstep(0.015, 0.16, length(col));
+  col *= mix(1.0, haloMask, uGlowTightness);
+  col = min(col, vec3(uGlowCap));
 
   if (uLightMode > 0.5) {
     float energy = max(max(col.r, col.g), col.b);
@@ -222,17 +231,32 @@ export default function Galaxy({
     const ctn = ctnDom.current;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const shouldAnimate = !disableAnimation && !reduceMotion;
+    const isSafari = /^((?!chrome|crios|android).)*safari/i.test(navigator.userAgent);
+    const safariGlowScale = isSafari ? 0.78 : 1;
+    const safariDepthScale = isSafari ? 0.82 : 1;
     const renderer = new Renderer({
       alpha: transparent,
-      premultipliedAlpha: false
+      depth: false,
+      stencil: false,
+      antialias: false,
+      premultipliedAlpha: false,
+      dpr: 1
     });
     const gl = renderer.gl;
+
+    // Keep the drawing buffer in the same colour space on Safari and Chromium.
+    try {
+      if ('drawingBufferColorSpace' in gl) gl.drawingBufferColorSpace = 'srgb';
+    } catch {
+      // Older WebGL implementations expose no writable colour-space control.
+    }
 
     if (lightMode) {
       gl.clearColor(1, 1, 1, 1);
     } else if (transparent) {
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      // The fullscreen shader replaces every pixel. Internal blending is not
+      // needed; the browser compositor handles this straight-alpha canvas.
+      gl.disable(gl.BLEND);
       gl.clearColor(0, 0, 0, 0);
     } else {
       gl.clearColor(0, 0, 0, 1);
@@ -272,7 +296,9 @@ export default function Galaxy({
         uMouse: {
           value: new Float32Array([smoothMousePos.current.x, smoothMousePos.current.y])
         },
-        uGlowIntensity: { value: glowIntensity },
+        uGlowIntensity: { value: glowIntensity * safariGlowScale },
+        uGlowTightness: { value: isSafari ? 0.38 : 0.0 },
+        uGlowCap: { value: isSafari ? 1.05 : 8.0 },
         uSaturation: { value: saturation },
         uMouseRepulsion: { value: mouseRepulsion },
         uTwinkleIntensity: { value: twinkleIntensity },
@@ -332,9 +358,9 @@ export default function Galaxy({
       // Multiplying absolute time by a changing speed caused visible reversals.
       program.uniforms.uSpeed.value = 1;
       program.uniforms.uDensity.value = smoothScene.density;
-      program.uniforms.uGlowIntensity.value = smoothScene.glowIntensity;
+      program.uniforms.uGlowIntensity.value = smoothScene.glowIntensity * safariGlowScale;
       program.uniforms.uFocusStrength.value = smoothScene.focusStrength;
-      program.uniforms.uDepthFocus.value = smoothScene.depthFocus;
+      program.uniforms.uDepthFocus.value = smoothScene.depthFocus * safariDepthScale;
       program.uniforms.uFieldOpacity.value = smoothScene.fieldOpacity;
 
       const lerpFactor = 0.05;
