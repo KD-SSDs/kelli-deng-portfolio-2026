@@ -1,5 +1,71 @@
 const byId = (id) => document.getElementById(id);
 
+// Interactive evidence should be ready before it is requested. Keeping this
+// cache local to the case study avoids competing with the hero on first load,
+// while decoding near-viewport alternatives prevents Safari from showing an
+// empty frame during a tab change.
+const imagePreloads = new Map();
+const preloadImage = (src, priority = 'low') => {
+  if (!src) return Promise.reject(new Error('Missing image source'));
+  if (imagePreloads.has(src)) return imagePreloads.get(src);
+
+  const task = new Promise((resolve, reject) => {
+    const probe = new Image();
+    probe.decoding = 'async';
+    if ('fetchPriority' in probe) probe.fetchPriority = priority;
+    probe.onload = async () => {
+      try { await probe.decode?.(); } catch {}
+      resolve(src);
+    };
+    probe.onerror = reject;
+    probe.src = src;
+  });
+
+  imagePreloads.set(src, task);
+  task.catch(() => imagePreloads.delete(src));
+  return task;
+};
+
+const preloadWhenNear = (element, sources) => {
+  if (!element || !sources.length) return;
+  const start = () => sources.forEach((src) => preloadImage(src).catch(() => {}));
+  if (!('IntersectionObserver' in window)) {
+    window.addEventListener('load', start, { once: true });
+    return;
+  }
+  const observer = new IntersectionObserver(([entry]) => {
+    if (!entry.isIntersecting) return;
+    observer.disconnect();
+    start();
+  }, { rootMargin: '120% 0px' });
+  observer.observe(element);
+};
+
+let imageSwapToken = 0;
+const swapDecodedImage = async (image, src, alt, onSwap) => {
+  if (!image || !src) return;
+  const token = ++imageSwapToken;
+  image.dataset.swapToken = String(token);
+
+  try {
+    await preloadImage(src, 'high');
+  } catch {
+    // Preserve the current image if a transient request fails; a later click
+    // can retry instead of replacing valid content with Safari's broken icon.
+    return;
+  }
+  if (image.dataset.swapToken !== String(token)) return;
+
+  image.classList.add('is-changing');
+  window.setTimeout(() => {
+    if (image.dataset.swapToken !== String(token)) return;
+    image.src = src;
+    image.alt = alt;
+    onSwap?.();
+    window.requestAnimationFrame(() => image.classList.remove('is-changing'));
+  }, 160);
+};
+
 const menuButton = document.querySelector('.menu-button');
 const mobileMenu = byId('mobile-menu');
 menuButton?.addEventListener('click', () => {
@@ -12,19 +78,25 @@ mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click
   mobileMenu.classList.remove('is-open');
 }));
 
-document.querySelectorAll('.research-tabs button').forEach((button) => {
+const researchButtons = [...document.querySelectorAll('.research-tabs button')];
+const researchSource = (button) => window.matchMedia('(max-width: 700px)').matches
+  ? button.dataset.researchImageMobile || button.dataset.researchImage
+  : button.dataset.researchImage;
+preloadWhenNear(document.querySelector('.research-stage'), researchButtons.map(researchSource));
+researchButtons.forEach((button) => {
+  const prime = () => preloadImage(researchSource(button), 'high').catch(() => {});
+  button.addEventListener('pointerenter', prime, { once: true });
+  button.addEventListener('focus', prime, { once: true });
   button.addEventListener('click', () => {
-    document.querySelectorAll('.research-tabs button').forEach((item) => item.classList.remove('is-active'));
+    researchButtons.forEach((item) => item.classList.remove('is-active'));
     button.classList.add('is-active');
     const image = byId('research-image');
-    image.classList.add('is-changing');
-    window.setTimeout(() => {
-      image.src = button.dataset.researchImage;
-      image.alt = button.dataset.title;
+    swapDecodedImage(image, researchSource(button), button.dataset.title, () => {
+      image.removeAttribute('srcset');
+      image.removeAttribute('sizes');
       byId('research-kicker').textContent = button.dataset.kicker;
       byId('research-title').textContent = button.dataset.title;
-      image.classList.remove('is-changing');
-    }, 160);
+    });
   });
 });
 
@@ -46,20 +118,26 @@ byId('path-image').style.transformOrigin = pathData.integrated.origin;
 byId('path-image').style.transform = `scale(${pathData.integrated.scale})`;
 
 const anchorData = {
-  high: { image: 'assets/三档产品——高.png', title: '高档：一体黑成为创新引领的视觉锚点', description: '副屏、摄像头与装饰件被整合进横向一体黑区域，形成系列中最强的价值表达。', alt: '高档产品一体黑 DECO 区域' },
-  mid: { image: 'assets/三档产品——中.png', title: '中档：承接一体黑的横向关系', description: '取消副屏后仍保留一体黑与横向矩阵关系，让高档视觉资产在中档完成承接转化。', alt: '中档产品一体黑 DECO 区域' },
-  low: { image: 'assets/三档产品——低.png', title: '底部：以更克制的强度夯实识别', description: '通过更大圆角、黑色高亮与横向结构保留系列识别，同时匹配底部产品的价值强度。', alt: '底部产品一体黑 DECO 区域' }
+  high: { image: 'assets/三档产品——高.opt.webp', title: '高档：一体黑成为创新引领的视觉锚点', description: '副屏、摄像头与装饰件被整合进横向一体黑区域，形成系列中最强的价值表达。', alt: '高档产品一体黑 DECO 区域' },
+  mid: { image: 'assets/三档产品——中.opt.webp', title: '中档：承接一体黑的横向关系', description: '取消副屏后仍保留一体黑与横向矩阵关系，让高档视觉资产在中档完成承接转化。', alt: '中档产品一体黑 DECO 区域' },
+  low: { image: 'assets/三档产品——低.opt.webp', title: '底部：以更克制的强度夯实识别', description: '通过更大圆角、黑色高亮与横向结构保留系列识别，同时匹配底部产品的价值强度。', alt: '底部产品一体黑 DECO 区域' }
 };
-document.querySelectorAll('.mode-switch button').forEach((button) => button.addEventListener('click', () => {
-  document.querySelectorAll('.mode-switch button').forEach((item) => item.classList.remove('is-active'));
-  button.classList.add('is-active');
-  const data = anchorData[button.dataset.anchor];
-  const image = byId('anchor-image');
-  image.classList.add('is-changing');
-  window.setTimeout(() => { image.src = data.image; image.alt = data.alt; image.classList.remove('is-changing'); }, 160);
-  byId('anchor-title').textContent = data.title;
-  byId('anchor-description').textContent = data.description;
-}));
+const anchorButtons = [...document.querySelectorAll('.mode-switch button')];
+preloadWhenNear(document.querySelector('.product-anchor'), Object.values(anchorData).map((item) => item.image));
+anchorButtons.forEach((button) => {
+  const prime = () => preloadImage(anchorData[button.dataset.anchor]?.image, 'high').catch(() => {});
+  button.addEventListener('pointerenter', prime, { once: true });
+  button.addEventListener('focus', prime, { once: true });
+  button.addEventListener('click', () => {
+    anchorButtons.forEach((item) => item.classList.remove('is-active'));
+    button.classList.add('is-active');
+    const data = anchorData[button.dataset.anchor];
+    const image = byId('anchor-image');
+    swapDecodedImage(image, data.image, data.alt);
+    byId('anchor-title').textContent = data.title;
+    byId('anchor-description').textContent = data.description;
+  });
+});
 
 const tierData = {
   all: '横向矩阵大 DECO、更大圆角与一体黑镜面灵动光影，在三档中保持连续识别并改变表达强度。',
@@ -139,17 +217,24 @@ const finalData = {
   cherry: { image: 'assets/蜂巢营销色主推dark cherry.opt.webp', kicker: 'Primary marketing color', title: '深樱桃色', description: '与一体黑设计契合，以更显性的蜂巢阵列加强视觉传播与结构符号。', alt: '深樱桃主推营销色产品' },
   orange: { image: 'assets/蜂巢营销色备选建渐变橙色.opt.webp', kicker: 'Alternate proposal', title: '橙色 · 营销色储备', description: '作为系列营销色备选方案保留，不替代最终主推营销色。', alt: '橙色备选营销色产品' }
 };
-document.querySelectorAll('.color-switch button').forEach((button) => button.addEventListener('click', () => {
-  document.querySelectorAll('.color-switch button').forEach((item) => item.classList.remove('is-active'));
-  button.classList.add('is-active');
-  const data = finalData[button.dataset.final];
-  const image = byId('final-product-image');
-  image.classList.add('is-changing');
-  window.setTimeout(() => { image.src = data.image; image.alt = data.alt; image.classList.remove('is-changing'); }, 160);
-  byId('final-kicker').textContent = data.kicker;
-  byId('final-title').textContent = data.title;
-  byId('final-description').textContent = data.description;
-}));
+const colorButtons = [...document.querySelectorAll('.color-switch button')];
+preloadWhenNear(document.querySelector('.marketing-compare-stage'), Object.values(finalData).map((item) => item.image));
+colorButtons.forEach((button) => {
+  const prime = () => preloadImage(finalData[button.dataset.final]?.image, 'high').catch(() => {});
+  button.addEventListener('pointerenter', prime, { once: true });
+  button.addEventListener('focus', prime, { once: true });
+  button.addEventListener('click', () => {
+    colorButtons.forEach((item) => item.classList.remove('is-active'));
+    button.classList.add('is-active');
+    const data = finalData[button.dataset.final];
+    const image = byId('final-product-image');
+    swapDecodedImage(image, data.image, data.alt, () => {
+      byId('final-kicker').textContent = data.kicker;
+      byId('final-title').textContent = data.title;
+      byId('final-description').textContent = data.description;
+    });
+  });
+});
 
 const finalScrollScene = document.querySelector('[data-final-scroll]');
 const updateFinalScroll = () => {
