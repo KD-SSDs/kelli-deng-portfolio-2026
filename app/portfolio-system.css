@@ -490,6 +490,8 @@
 .home-identity h1 span { display: block; margin-top: 18px; color: #9b9e9d; font-size: 0.33em; font-weight: 360; letter-spacing: 0.04em; }
 .home-belief-scene { position: absolute; inset: 0; perspective: 1100px; transform-style: preserve-3d; }
 .home-belief-heading { position: absolute; inset: 48% 0 auto; margin: 0; color: #b1b3b2; transform-style: preserve-3d; }
+.home-belief-heading,
+.home-principle { opacity: 0; visibility: hidden; }
 .home-belief-heading span { margin-left: 10px; color: #777b7a; font-size: 0.86em; font-weight: 400; }
 .home-principle { position: absolute; inset: 55% 0 auto; height: 33%; display: flex; flex-direction: column; justify-content: center; padding: 0 clamp(24px, 4vw, 64px); overflow: hidden; will-change: transform, opacity, clip-path, filter; }
 .home-scroll-reveal { width: 100%; margin: 0; }

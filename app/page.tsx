@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Galaxy from "../components/Galaxy";
-import DriftWall from "../components/DriftWall";
 import ScrollReveal from "../components/ScrollReveal";
 import { Footer, GlobalNav } from "./components/PortfolioShell";
 
@@ -21,6 +20,8 @@ const motionItems = Array.from({ length: 15 }, (_, index) =>
     title: `Project archive image ${String(index + 1).padStart(2, "0")}`,
   })
 );
+
+const DriftWall = lazy(() => import("../components/DriftWall"));
 
 export default function Home() {
   const pageRef = useRef<HTMLElement>(null);
@@ -160,7 +161,9 @@ export default function Home() {
         <div className="home-galaxy-tail" aria-hidden="true" />
         <section className="home-drift-wall-section" aria-labelledby="selected-work-title">
           <div className="home-drift-wall-inner">
-            <DriftWall items={motionItems} columns={5} tileWidth={240} tileHeight={240} gap={18} radius={16} tilt={9} turn={-8} depth={64} speed={27} variance={0.25} parallax={0.24} lift={42} fade={0.92} dim={0.72} grayscale overlayColor="#0b0c0d" />
+            <Suspense fallback={null}>
+              <DriftWall items={motionItems} columns={5} tileWidth={240} tileHeight={240} gap={18} radius={16} tilt={9} turn={-8} depth={64} speed={27} variance={0.25} parallax={0.24} lift={42} fade={0.92} dim={0.72} grayscale overlayColor="#0b0c0d" />
+            </Suspense>
           </div>
           <h2 id="selected-work-title">Selected Work</h2>
         </section>

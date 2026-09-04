@@ -4,6 +4,46 @@ import { useRef } from "react";
 import { Footer, GlobalNav } from "../../components/PortfolioShell";
 
 const A = "/project04/";
+const O = `${A}optimized/`;
+
+const optimizedDimensions: Record<string, [number, number]> = {
+  "01.jpg": [1920, 1080], "02.jpg": [1920, 1080], "03.jpg": [1920, 1080],
+  "04.jpg": [1920, 1080], "05.jpg": [1920, 1080], "06.jpg": [1920, 1080],
+  "07.jpg": [1920, 1080], "08.jpg": [1920, 1080], "09.jpg": [1920, 1080],
+  "10.jpg": [1920, 1080], "11.jpg": [1920, 1080], "12.jpg": [1920, 1080],
+  "13.jpg": [1927, 1076], "cold-aluminum.jpg": [1927, 1076],
+  "heat-titanium.jpg": [1927, 1076], "heat-titanium-02.jpg": [1927, 1076],
+};
+
+function P04Image({ src, alt, className = "", sizes = "100vw", eager = false }: { src: string; alt: string; className?: string; sizes?: string; eager?: boolean }) {
+  if (!optimizedDimensions[src]) {
+    return <img className={className || undefined} src={`${A}${src}`} alt={alt} loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} decoding="async" />;
+  }
+  const stem = src.replace(/\.[^.]+$/, "");
+  const [width, height] = optimizedDimensions[src];
+  const fallback = `${A}${src}`;
+  return (
+    <img
+      className={className || undefined}
+      src={`${O}${stem}-1600.webp`}
+      srcSet={`${O}${stem}-960.webp 960w, ${O}${stem}-1600.webp 1600w`}
+      sizes={sizes}
+      width={width}
+      height={height}
+      alt={alt}
+      loading={eager ? "eager" : "lazy"}
+      fetchPriority={eager ? "high" : "auto"}
+      decoding="async"
+      data-fallback={fallback}
+      onError={(event) => {
+        const image = event.currentTarget;
+        if (image.src.endsWith(fallback)) return;
+        image.srcset = "";
+        image.src = fallback;
+      }}
+    />
+  );
+}
 
 const colors = [
   { image: "09.jpg", index: "01", name: "淬火黑", role: "基础色 · 强识别", note: "深色耐用基底，以厚镀渐变金属聚焦一体凹槽大装饰件。" },
@@ -28,7 +68,7 @@ function ColorCarousel() {
       <div className="color-rail" ref={rail} tabIndex={0} aria-label="四套手机与配件配色方案">
         {colors.map((color) => (
           <article className="color-card" key={color.name}>
-            <img decoding="async" loading="lazy" src={`${A}${color.image}`} alt={`${color.name}手机与配件家族方案`} />
+            <P04Image src={color.image} alt={`${color.name}手机与配件家族方案`} sizes="(max-width: 900px) 88vw, 82vw" />
             <div className="color-caption">
               <span>{color.index}</span>
               <div><h3>{color.name}</h3><p>{color.role}</p></div>
@@ -43,7 +83,10 @@ function ColorCarousel() {
 }
 
 function EvidenceImage({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
-  return <figure className={`evidence ${className}`}><img decoding="async" src={`${A}${src}`} alt={alt} loading="lazy" /></figure>;
+  const sizes = className.includes("wide") || className.includes("retail")
+    ? "(max-width: 900px) calc(100vw - 40px), 94vw"
+    : "(max-width: 900px) calc(100vw - 40px), 46vw";
+  return <figure className={`evidence ${className}`}><P04Image src={src} alt={alt} sizes={sizes} /></figure>;
 }
 
 export default function Home() {
@@ -59,7 +102,7 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <img decoding="async" fetchPriority="high" src={`${A}06.jpg`} alt="P90 手机户外场景概念图" />
+        <P04Image src="06.jpg" alt="P90 手机户外场景概念图" eager />
         <div className="hero-shade" />
         <div className="hero-copy">
           <p className="eyebrow">CMFD · SERIES DESIGN LANGUAGE · 2-WEEK SPRINT</p>
@@ -132,12 +175,12 @@ export default function Home() {
           <article className="study heat">
             <div className="study-copy"><span>A</span><h3>淬火钛灰 → 淬火黑</h3><p>厚镀渐变镜片提供强反射防护与时尚感；钛金属反复受热形成的氧化层，则带来坚固、温度与时间的联想。</p><p>将这种渐变聚焦在一体金属凹槽大装饰件上，以基础黑控制整体张力，形成远看克制、近看有记忆点的表达。</p></div>
             <div className="mood-grid"><img decoding="async" loading="lazy" src={`${A}heat-inspiration-01.jpg`} alt="厚镀渐变滑雪镜灵感" /><img decoding="async" loading="lazy" src={`${A}heat-inspiration-02.jpg`} alt="火烧钛杯氧化渐变灵感" /></div>
-            <img decoding="async" loading="lazy" className="study-result" src={`${A}heat-titanium.jpg`} alt="淬火钛灰手机配色推演方案" />
-            <img decoding="async" loading="lazy" className="study-result" src={`${A}heat-titanium-02.jpg`} alt="淬火钛灰横向细节推演方案" />
+            <P04Image className="study-result" src="heat-titanium.jpg" alt="淬火钛灰手机配色推演方案" sizes="(max-width: 900px) calc(100vw - 64px), 90vw" />
+            <P04Image className="study-result" src="heat-titanium-02.jpg" alt="淬火钛灰横向细节推演方案" sizes="(max-width: 900px) calc(100vw - 64px), 90vw" />
           </article>
           <article className="study cold">
             <div className="study-copy"><span>B</span><h3>雪山冷铝</h3><p>以高亮抛光与冷铝光泽强调金属的硬度，同时减少传统工具感，让强度表达更精致、更接近日常时尚产品。</p></div>
-            <img decoding="async" loading="lazy" className="study-result" src={`${A}cold-aluminum.jpg`} alt="雪山冷铝手机配色推演方案" />
+            <P04Image className="study-result" src="cold-aluminum.jpg" alt="雪山冷铝手机配色推演方案" sizes="(max-width: 900px) calc(100vw - 64px), 61vw" />
           </article>
         </div>
 

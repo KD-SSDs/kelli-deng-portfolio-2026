@@ -1,5 +1,5 @@
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './Galaxy.css';
 
 const vertexShader = `
@@ -171,7 +171,10 @@ void main() {
     vec3 stars = StarLayer(uv * scale + layerOffset);
     // A second, radially offset sample creates a short forward-depth trace
     // around the focal point without translating or shaking the camera.
-    vec3 depthTrace = StarLayer(uv * scale * (1.0 - 0.034 * uDepthFocus) + layerOffset);
+    vec3 depthTrace = vec3(0.0);
+    if (uDepthFocus > 0.015) {
+      depthTrace = StarLayer(uv * scale * (1.0 - 0.034 * uDepthFocus) + layerOffset);
+    }
     col += (stars + depthTrace * (0.62 * uDepthFocus)) * fade;
   }
 
@@ -225,6 +228,8 @@ export default function Galaxy({
   const smoothMousePos = useRef({ x: 0.5, y: 0.5 });
   const targetMouseActive = useRef(0.0);
   const smoothMouseActive = useRef(0.0);
+  const initRetries = useRef(0);
+  const [renderAttempt, setRenderAttempt] = useState(0);
 
   useEffect(() => {
     if (!ctnDom.current) return;
@@ -232,14 +237,25 @@ export default function Galaxy({
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const shouldAnimate = !disableAnimation && !reduceMotion;
     const isSafari = /^((?!chrome|crios|android).)*safari/i.test(navigator.userAgent);
-    const safariGlowScale = isSafari ? 0.78 : 1;
-    const safariDepthScale = isSafari ? 0.82 : 1;
+    const safariGlowScale = isSafari ? 0.56 : 1;
+    const safariDepthScale = isSafari ? 0.74 : 1;
+    const useTransparentCanvas = transparent && !isSafari;
+    const shaderSource = isSafari
+      ? fragmentShader
+          .replace('precision highp float;', 'precision mediump float;')
+          .replace('#define NUM_LAYER 4.0', '#define NUM_LAYER 3.0')
+      : fragmentShader;
+    let retryTimer = 0;
+
+    try {
     const renderer = new Renderer({
-      alpha: transparent,
+      alpha: useTransparentCanvas,
       depth: false,
       stencil: false,
       antialias: false,
       premultipliedAlpha: false,
+      powerPreference: isSafari ? 'low-power' : 'default',
+      webgl: isSafari ? 1 : 2,
       dpr: 1
     });
     const gl = renderer.gl;
@@ -253,7 +269,7 @@ export default function Galaxy({
 
     if (lightMode) {
       gl.clearColor(1, 1, 1, 1);
-    } else if (transparent) {
+    } else if (useTransparentCanvas) {
       // The fullscreen shader replaces every pixel. Internal blending is not
       // needed; the browser compositor handles this straight-alpha canvas.
       gl.disable(gl.BLEND);
@@ -275,13 +291,10 @@ export default function Galaxy({
         );
       }
     }
-    window.addEventListener('resize', resize, false);
-    resize();
-
     const geometry = new Triangle(gl);
     program = new Program(gl, {
       vertex: vertexShader,
-      fragment: fragmentShader,
+      fragment: shaderSource,
       uniforms: {
         uTime: { value: 0 },
         uResolution: {
@@ -297,8 +310,8 @@ export default function Galaxy({
           value: new Float32Array([smoothMousePos.current.x, smoothMousePos.current.y])
         },
         uGlowIntensity: { value: glowIntensity * safariGlowScale },
-        uGlowTightness: { value: isSafari ? 0.38 : 0.0 },
-        uGlowCap: { value: isSafari ? 1.05 : 8.0 },
+        uGlowTightness: { value: isSafari ? 0.68 : 0.0 },
+        uGlowCap: { value: isSafari ? 0.76 : 8.0 },
         uSaturation: { value: saturation },
         uMouseRepulsion: { value: mouseRepulsion },
         uTwinkleIntensity: { value: twinkleIntensity },
@@ -309,12 +322,14 @@ export default function Galaxy({
         uDepthFocus: { value: 0.0 },
         uFieldOpacity: { value: 1.0 },
         uAutoCenterRepulsion: { value: autoCenterRepulsion },
-        uTransparent: { value: transparent },
+        uTransparent: { value: useTransparentCanvas },
         uLightMode: { value: lightMode ? 1 : 0 }
       }
     });
 
     const mesh = new Mesh(gl, { geometry, program });
+    window.addEventListener('resize', resize, false);
+    resize();
     let animateId;
     let isRunning = false;
     let isInViewport = false;
@@ -388,7 +403,28 @@ export default function Galaxy({
       cancelAnimationFrame(animateId);
     }
 
+    function handleContextLost(event) {
+      event.preventDefault();
+      stop();
+      ctn.dataset.galaxyState = 'lost';
+    }
+
+    function handleContextRestored() {
+      // OGL resources cannot safely be reused after a WebGL context restore.
+      // A single page reload is more reliable than leaving Safari on a black
+      // canvas, while normal navigation and Chrome behavior remain untouched.
+      const lastReload = Number(sessionStorage.getItem('galaxy-context-reload') || 0);
+      if (Date.now() - lastReload > 30000) {
+        sessionStorage.setItem('galaxy-context-reload', String(Date.now()));
+        window.location.reload();
+      }
+    }
+
     ctn.appendChild(gl.canvas);
+    initRetries.current = 0;
+    ctn.dataset.galaxyState = 'ready';
+    gl.canvas.addEventListener('webglcontextlost', handleContextLost, false);
+    gl.canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
     update(0);
 
     const visibilityObserver = new IntersectionObserver(([entry]) => {
@@ -432,12 +468,25 @@ export default function Galaxy({
         interactionTarget.removeEventListener('pointermove', handleMouseMove);
         interactionTarget.removeEventListener('pointerleave', handleMouseLeave);
       }
+      gl.canvas.removeEventListener('webglcontextlost', handleContextLost);
+      gl.canvas.removeEventListener('webglcontextrestored', handleContextRestored);
       if (gl.canvas.parentNode === ctn) ctn.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
+    } catch (error) {
+      ctn.dataset.galaxyState = 'failed';
+      console.warn('Galaxy WebGL initialization failed', error);
+      if (isSafari && initRetries.current < 2) {
+        initRetries.current += 1;
+        retryTimer = window.setTimeout(() => setRenderAttempt((attempt) => attempt + 1), 240 * initRetries.current);
+      }
+      return () => window.clearTimeout(retryTimer);
+    }
   }, [
-    focal,
-    rotation,
+    focal[0],
+    focal[1],
+    rotation[0],
+    rotation[1],
     starSpeed,
     density,
     hueShift,
@@ -454,7 +503,8 @@ export default function Galaxy({
     transparent,
     lightMode,
     interactionTargetRef,
-    sceneStateRef
+    sceneStateRef,
+    renderAttempt
   ]);
 
   return <div ref={ctnDom} className="galaxy-container" {...rest} />;
